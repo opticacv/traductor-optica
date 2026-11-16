@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Traductor · Óptica y Ortopedia</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Traductor">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icono-192.png">
+<link rel="manifest" href="manifest.json">
+<style>
+  :root{--ac:#7a6345;--ac2:#f1eadf;--marca:#b49d80;--txt:#1d1d1b;--gris:#6b6358;--linea:#e7dfd3}
+  *{box-sizing:border-box;margin:0;padding:0}
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f7f5f1;color:var(--txt);
+    padding:calc(env(safe-area-inset-top) + 14px) calc(env(safe-area-inset-right) + 14px) calc(env(safe-area-inset-bottom) + 14px) calc(env(safe-area-inset-left) + 14px)}
+  button,textarea{font:inherit;color:inherit}
+  .vista{display:none;min-height:100%;flex-direction:column}
+  .vista.activa{display:flex}
+
+  /* ---------- Pantalla 1: idiomas ---------- */
+  header.cab{text-align:center;margin:6px 0 16px}
+  .logo{width:clamp(110px,18vw,160px);height:auto;border-radius:50%;background:#fff;margin:0 auto 12px;display:block}
+  h1{font-size:clamp(22px,4vw,34px);font-weight:700}
+  .sub{color:var(--gris);font-size:clamp(14px,2.2vw,18px);margin-top:6px;line-height:1.5}
+  .rejilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;flex:1;align-content:start}
+  .idioma{background:#fff;border:2px solid var(--linea);border-radius:18px;padding:16px 10px;text-align:center;cursor:pointer;
+    transition:transform .1s,border-color .1s;-webkit-tap-highlight-color:transparent}
+  .idioma:active{transform:scale(.96);border-color:var(--ac)}
+  .bandera{font-size:46px;line-height:1}
+  .nombre{font-size:20px;font-weight:700;margin-top:8px}
+  .hola{font-size:15px;color:var(--gris);margin-top:2px}
+
+  /* ---------- Pantalla 2: conversación ---------- */
+  .barra{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .barra img{width:48px;height:48px;border-radius:50%;background:#fff}
+  .barra .titulo{flex:1;font-weight:700;font-size:18px}
+  .barra .titulo small{display:block;font-weight:400;color:var(--gris);font-size:14px}
+  .btnv{border:1px solid var(--linea);background:#fff;border-radius:12px;padding:10px 14px;cursor:pointer;font-size:16px}
+  .paneles{display:grid;grid-template-columns:1fr;gap:12px;flex:1;min-height:0}
+  .panel{background:#fff;border:2px solid var(--linea);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:0}
+  .panel.pac{border-color:var(--marca)}
+  .phead{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px}
+  .phead .fl{font-size:26px}
+  .phead .who{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ac);margin-left:auto}
+  textarea{width:100%;min-height:84px;resize:none;border:1px solid var(--linea);border-radius:14px;padding:12px;font-size:19px;background:#f7f5f1}
+  textarea:focus{outline:3px solid var(--marca);border-color:var(--ac)}
+  .fila{display:flex;gap:8px}
+  .btn{flex:1;border:0;border-radius:14px;padding:14px;font-size:18px;font-weight:700;cursor:pointer;background:var(--ac);color:#fff}
+  .btn:disabled{opacity:.5}
+  .btn.sec{flex:none;background:#fff;color:var(--txt);border:1px solid var(--linea);padding:14px 16px}
+  .salida{flex:1;min-height:70px;overflow:auto;background:var(--ac2);border-radius:14px;padding:14px;font-size:clamp(22px,3.2vw,30px);font-weight:600;line-height:1.35}
+  .salida.vacia{font-size:15px;font-weight:400;color:var(--gris)}
+  .salida .orig{display:block;font-size:14px;font-weight:400;color:var(--gris);margin-top:8px}
+  .pista{font-size:13px;color:var(--gris)}
+  .respaldo{font-size:14px;color:var(--gris);text-align:center;margin-top:10px}
+  .respaldo a{color:var(--ac)}
+  .aviso{background:#fbefd9;border-radius:12px;padding:10px 14px;font-size:15px;margin-bottom:10px}
+  [dir=rtl]{direction:rtl;text-align:right}
+  .mic{flex:none;border:0;border-radius:14px;padding:14px 18px;font-size:22px;cursor:pointer;background:var(--ac2);color:var(--ac)}
+  .mic.on{background:#b3261e;color:#fff;animation:lat 1s infinite}
+  @keyframes lat{50%{opacity:.6}}
+  .ajustes{position:fixed;right:calc(env(safe-area-inset-right) + 10px);bottom:calc(env(safe-area-inset-bottom) + 10px);border:0;background:none;font-size:22px;opacity:.35;cursor:pointer}
+  .velo{position:fixed;inset:0;background:rgba(14,20,26,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+  .hoja{background:#fff;border-radius:18px;padding:20px;width:min(520px,100%);display:flex;flex-direction:column;gap:12px}
+  .hoja h3{font-size:20px}
+  .hoja p{font-size:15px;color:var(--gris);line-height:1.45}
+  .hoja input{border:1px solid var(--linea);border-radius:12px;padding:12px;font:inherit;font-size:16px;width:100%}
+
+  @media (min-width:760px){ .paneles{grid-template-columns:1fr 1fr} }
+
+  /* iPad en horizontal */
+  @media (orientation:landscape) and (min-width:700px){
+    html,body{height:100%}
+    body{height:100vh;height:100dvh;overflow:auto}
+    #inicio.activa{display:grid;grid-template-columns:minmax(220px,28%) 1fr;gap:20px;height:100%}
+    #inicio header{margin:0;display:flex;flex-direction:column;justify-content:center}
+    #inicio .logo{width:clamp(120px,16vw,190px)}
+    .rejilla{grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,minmax(0,1fr));gap:8px;height:100%;min-height:0}
+    #inicio.activa{min-height:0}
+    .idioma{display:flex;flex-direction:column;justify-content:center;padding:6px}
+    .bandera{font-size:clamp(30px,5vh,46px)}
+    .nombre{font-size:clamp(16px,2.6vh,20px);margin-top:4px}
+    .hola{font-size:clamp(12px,1.9vh,15px)}
+    #conv.activa{height:100%}
+  }
+</style>
+</head>
+<body>
+
+<section id="inicio" class="vista activa">
+  <header class="cab">
+    <img class="logo" src="logo.png" alt="Óptica y Ortopedia">
+    <h1>Toque su idioma</h1>
+    <p class="sub">Tap your language · Touchez votre langue · Tippen Sie auf Ihre Sprache<br>اختر لغتك · 请选择您的语言 · Выберите язык</p>
+  </header>
+  <div class="rejilla" id="rejilla"></div>
+</section>
+
+<section id="conv" class="vista">
+  <div class="barra">
+    <img src="logo.png" alt="">
+    <div class="titulo" id="cTitulo"></div>
+    <button class="btnv" id="cVolver">← Idiomas</button>
+  </div>
+  <div class="aviso" id="cAviso" hidden></div>
+  <div class="paneles">
+    <!-- Farmacia (español) -->
+    <div class="panel">
+      <div class="phead"><span class="fl">🇪🇸</span> Español <span class="who">Óptica · Ortopedia</span></div>
+      <textarea id="tEs" placeholder="Escriba aquí lo que quiere decir al cliente…"></textarea>
+      <div class="fila">
+        <button class="mic" id="mEs" hidden title="Hablar">🎤</button>
+        <button class="btn" id="bEs">Traducir y decir</button>
+        <button class="btn sec" id="lEs" title="Borrar">✕</button>
+      </div>
+      <div class="salida vacia" id="oEs">La traducción aparecerá aquí y se leerá en voz alta en el idioma del cliente.</div>
+      <div class="pista">Pulse 🎤, hable y vuelva a pulsar para terminar. También puede escribir.</div>
+    </div>
+    <!-- Paciente -->
+    <div class="panel pac">
+      <div class="phead"><span class="fl" id="pFl"></span> <span id="pNom"></span> <span class="who" id="pWho"></span></div>
+      <textarea id="tPa"></textarea>
+      <div class="fila">
+        <button class="mic" id="mPa" hidden title="Hablar">🎤</button>
+        <button class="btn" id="bPa"></button>
+        <button class="btn sec" id="lPa" title="Borrar">✕</button>
+      </div>
+      <div class="salida vacia" id="oPa">Aquí verá en español lo que escriba el cliente.</div>
+    </div>
+  </div>
+  <p class="respaldo">Si algo falla: <a id="cGoogle" href="#" target="_blank" rel="noopener">abrir Google Traductor</a></p>
+</section>
+
+<button class="ajustes" id="abrirAjustes" title="Ajustes">⚙️</button>
+<div class="velo" id="velo" hidden>
+  <div class="hoja">
+    <h3>Ajustes del traductor</h3>
+    <p>Pegue aquí la clave de la API de Google Cloud Translation. Se guarda solo en este iPad.</p>
+    <input id="clave" type="password" placeholder="AIza…" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="fila">
+      <button class="btn sec" id="cerrarAjustes">Cancelar</button>
+      <button class="btn" id="guardarClave">Guardar y probar</button>
+    </div>
+    <p id="estadoClave"></p>
+  </div>
+</div>
+<script>
+const IDIOMAS = [
+  {c:"en",voz:"en-GB",f:"🇬🇧",n:"English",es:"inglés",h:"Hello",ph:"Type here what you want to say…",b:"Translate",w:"Patient"},
+  {c:"fr",voz:"fr-FR",f:"🇫🇷",n:"Français",es:"francés",h:"Bonjour",ph:"Écrivez ici ce que vous voulez dire…",b:"Traduire",w:"Patient"},
+  {c:"de",voz:"de-DE",f:"🇩🇪",n:"Deutsch",es:"alemán",h:"Hallo",ph:"Schreiben Sie hier, was Sie sagen möchten…",b:"Übersetzen",w:"Patient"},
+  {c:"it",voz:"it-IT",f:"🇮🇹",n:"Italiano",es:"italiano",h:"Ciao",ph:"Scriva qui quello che vuole dire…",b:"Traduci",w:"Paziente"},
+  {c:"pt",voz:"pt-PT",f:"🇵🇹",n:"Português",es:"portugués",h:"Olá",ph:"Escreva aqui o que quer dizer…",b:"Traduzir",w:"Paciente"},
+  {c:"ro",voz:"ro-RO",f:"🇷🇴",n:"Română",es:"rumano",h:"Bună ziua",ph:"Scrieți aici ce doriți să spuneți…",b:"Traduceți",w:"Pacient"},
+  {c:"ar",voz:"ar-SA",f:"🇲🇦",n:"العربية",es:"árabe",h:"مرحبا",rtl:true,ph:"اكتب هنا ما تريد قوله…",b:"ترجم",w:"المريض"},
+  {c:"zh-CN",voz:"zh-CN",f:"🇨🇳",n:"中文",es:"chino",h:"你好",ph:"请在这里输入您想说的话…",b:"翻译",w:"患者"},
+  {c:"ru",voz:"ru-RU",f:"🇷🇺",n:"Русский",es:"ruso",h:"Здравствуйте",ph:"Напишите здесь, что вы хотите сказать…",b:"Перевести",w:"Пациент"},
+  {c:"uk",voz:"uk-UA",f:"🇺🇦",n:"Українська",es:"ucraniano",h:"Вітаю",ph:"Напишіть тут, що ви хочете сказати…",b:"Перекласти",w:"Пацієнт"},
+  {c:"nl",voz:"nl-NL",f:"🇳🇱",n:"Nederlands",es:"neerlandés",h:"Hallo",ph:"Typ hier wat u wilt zeggen…",b:"Vertalen",w:"Patiënt"},
+  {c:"pl",voz:"pl-PL",f:"🇵🇱",n:"Polski",es:"polaco",h:"Dzień dobry",ph:"Napisz tutaj, co chcesz powiedzieć…",b:"Przetłumacz",w:"Pacjent"},
+  {c:"sv",voz:"sv-SE",f:"🇸🇪",n:"Svenska",es:"sueco",h:"Hej",ph:"Skriv här vad du vill säga…",b:"Översätt",w:"Patient"},
+  {c:"hi",voz:"hi-IN",f:"🇮🇳",n:"हिन्दी",es:"hindi",h:"नमस्ते",ph:"यहाँ लिखें कि आप क्या कहना चाहते हैं…",b:"अनुवाद करें",w:"मरीज़"},
+  {c:"ja",voz:"ja-JP",f:"🇯🇵",n:"日本語",es:"japonés",h:"こんにちは",ph:"伝えたいことをここに入力してください…",b:"翻訳",w:"患者"},
+  {c:"tr",voz:"tr-TR",f:"🇹🇷",n:"Türkçe",es:"turco",h:"Merhaba",ph:"Söylemek istediğinizi buraya yazın…",b:"Çevir",w:"Hasta"}
+];
+const SALUDO = {
+  en:"Welcome! One moment, please — we will talk with you using a translator.",
+  fr:"Bienvenue ! Un instant, s'il vous plaît — nous allons vous parler à l'aide d'un traducteur.",
+  de:"Willkommen! Einen Moment bitte – wir sprechen mit Ihnen über einen Übersetzer.",
+  it:"Benvenuto! Un momento, per favore: le parleremo tramite un traduttore.",
+  pt:"Bem-vindo! Um momento, por favor — vamos falar consigo através de um tradutor.",
+  ro:"Bine ați venit! Un moment, vă rog — vom vorbi cu dumneavoastră printr-un traducător.",
+  ar:"أهلاً وسهلاً! لحظة من فضلك، سنتحدث معك باستخدام مترجم.",
+  "zh-CN":"欢迎！请稍等，我们将通过翻译软件与您交流。",
+  ru:"Добро пожаловать! Одну минуту, пожалуйста — мы будем говорить с вами через переводчик.",
+  uk:"Ласкаво просимо! Хвилинку, будь ласка — ми будемо говорити з вами через перекладач.",
+  nl:"Welkom! Een moment alstublieft — we praten met u via een vertaler.",
+  pl:"Witamy! Proszę chwilę poczekać — porozmawiamy przez tłumacza.",
+  sv:"Välkommen! Ett ögonblick, tack — vi pratar med dig via en översättare.",
+  hi:"स्वागत है! कृपया एक क्षण रुकें — हम अनुवादक की मदद से आपसे बात करेंगे।",
+  ja:"ようこそ！少々お待ちください。翻訳アプリを使ってお話しします。",
+  tr:"Hoş geldiniz! Bir dakika lütfen — sizinle bir çevirmen aracılığıyla konuşacağız."
+};
+const _NOMBRE_EN = {en:"English",fr:"French",de:"German",it:"Italian",pt:"European Portuguese",ro:"Romanian",ar:"Arabic","zh-CN":"Simplified Chinese",ru:"Russian",uk:"Ukrainian",nl:"Dutch",pl:"Polish",sv:"Swedish",hi:"Hindi",ja:"Japanese",tr:"Turkish"};
+
+const $ = id => document.getElementById(id);
+let L = null;
+
+// ---------- Clave de Google ----------
+let CLAVE = "";
+try { CLAVE = localStorage.getItem("gt_clave") || ""; } catch(e) {}
+function aviso(t){ const a=$("cAviso"); if(t){a.textContent=t;a.hidden=false}else{a.hidden=true} }
+
+// ---------- Voz (salida) ----------
+function decir(texto, lang){
+  return new Promise(res => {
+    try{
+      if(!("speechSynthesis" in window)) return res();
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(texto);
+      u.lang = lang; u.rate = 0.92;
+      const base = lang.slice(0,2).toLowerCase();
+      const vs = speechSynthesis.getVoices();
+      const v = vs.find(x => (x.lang||"").toLowerCase().replace("_","-") === lang.toLowerCase())
+             || vs.find(x => (x.lang||"").toLowerCase().startsWith(base));
+      if(v) u.voice = v;
+      u.onend = u.onerror = () => res();
+      speechSynthesis.speak(u);
+    }catch(e){ res(); }
+  });
+}
+try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => {}; }catch(e){}
+
+// ---------- Voz (entrada: micrófono) ----------
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, recBtn = null;
+function pararMic(){ try{ rec && rec.stop(); }catch(e){} }
+let micBloqueado = false;
+try{ localStorage.removeItem("mic_teclado"); }catch(e){}
+function usarTeclado(area){
+  try{ rec && rec.abort(); }catch(e){}
+  rec = null; recBtn = null;
+  document.querySelectorAll(".mic.on").forEach(b => b.classList.remove("on"));
+  aviso("En este iPad, dicte con el 🎤 del teclado (junto a la barra espaciadora): toque el cuadro de texto, pulse 🎤 y hable.");
+  area.focus();
+}
+function escuchar(btn, area, lang){
+  if(micBloqueado){ usarTeclado(area); return; }
+  if(rec){ const mismo = recBtn===btn; pararMic(); if(mismo) return; }
+  try{ speechSynthesis.cancel(); }catch(e){}
+  const r = new SR(); rec = r; recBtn = btn;
+  r.lang = lang; r.interimResults = true; r.continuous = true;
+  const previo = area.value ? area.value.trim() + " " : "";
+  let finalTxt = "";
+  r.onresult = ev => {
+    let parcial = "";
+    for(let i=ev.resultIndex;i<ev.results.length;i++){
+      const t = ev.results[i][0].transcript;
+      if(ev.results[i].isFinal) finalTxt += t + " "; else parcial += t;
+    }
+    area.value = (previo + finalTxt + parcial).trim();
+  };
+  r.onerror = ev => {
+    if(ev.error==="not-allowed" || ev.error==="service-not-allowed" || ev.error==="audio-capture"){
+      micBloqueado = true;
+      usarTeclado(area);
+    }
+  };
+  r.onend = () => { btn.classList.remove("on"); if(rec===r){ rec=null; recBtn=null; } };
+  btn.classList.add("on");
+  try{ r.start(); }catch(e){ btn.classList.remove("on"); rec=null; micBloqueado=true; usarTeclado(area); }
+}
+
+// ---------- Traducción (Google Cloud Translation) ----------
+async function traducir(texto, de, a){
+  if(!CLAVE) throw {code:"sin_clave"};
+  const r = await fetch("https://translation.googleapis.com/language/translate/v2?key=" + encodeURIComponent(CLAVE), {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({q:texto, source:de, target:a, format:"text"})
+  });
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok) throw {code:"google", message:(j.error && j.error.message) || ("Error " + r.status)};
+  return j.data.translations[0].translatedText;
+}
+
+async function turno(desdeEs){
+  const t = desdeEs ? $("tEs") : $("tPa");
+  const o = desdeEs ? $("oEs") : $("oPa");
+  const b = desdeEs ? $("bEs") : $("bPa");
+  const texto = t.value.trim();
+  if(!texto) return;
+  pararMic();
+  if(!CLAVE){ abrirAjustes(); return; }
+  b.disabled = true; const txtBtn = b.textContent; b.textContent = "…";
+  o.classList.remove("vacia"); o.textContent = desdeEs ? "Traduciendo…" : "…";
+  try{
+    const res = desdeEs
+      ? await traducir(texto, "es", L.c)
+      : await traducir(texto, L.c, "es");
+    o.dir = (desdeEs && L.rtl) ? "rtl" : "ltr";
+    o.textContent = res;
+    const orig = document.createElement("span"); orig.className="orig"; orig.textContent = texto; orig.dir = (!desdeEs && L.rtl) ? "rtl" : "ltr";
+    o.appendChild(orig);
+    t.value = "";
+    await decir(res, desdeEs ? L.voz : "es-ES");
+  }catch(e){
+    if(e && e.code==="google"){ o.textContent="Google no ha traducido: " + e.message; }
+    else if(e && e.code==="sin_clave"){ o.textContent="Falta la clave de Google (⚙️ abajo a la derecha)."; }
+    else { o.textContent="No se pudo traducir. Compruebe la conexión a internet."; }
+  }finally{ b.disabled=false; b.textContent=txtBtn; }
+}
+
+// ---------- Pantallas ----------
+IDIOMAS.forEach(x => {
+  const b = document.createElement("button");
+  b.className = "idioma";
+  b.innerHTML = `<div class="bandera">${x.f}</div><div class="nombre">${x.n}</div><div class="hola">${x.h}</div>`;
+  b.addEventListener("click", () => abrir(x));
+  $("rejilla").appendChild(b);
+});
+
+function abrir(x){
+  L = x;
+  $("cTitulo").innerHTML = `${x.f} Español ↔ ${x.es.charAt(0).toUpperCase()+x.es.slice(1)}<small>Escriba, pulse traducir y se leerá en voz alta</small>`;
+  $("pFl").textContent = x.f; $("pNom").textContent = x.n; $("pWho").textContent = x.w;
+  $("tPa").placeholder = x.ph; $("tPa").dir = x.rtl ? "rtl" : "ltr";
+  $("bPa").textContent = x.b + " 🔊";
+  $("bEs").textContent = "Traducir y decir 🔊";
+  const o=$("oPa"); o.className="salida"; o.dir = x.rtl?"rtl":"ltr"; o.textContent = SALUDO[x.c];
+  $("oEs").className="salida vacia"; $("oEs").dir="ltr";
+  $("oEs").textContent="La traducción aparecerá aquí y se leerá en voz alta en el idioma del cliente.";
+  $("tEs").value=""; $("tPa").value="";
+  $("cGoogle").href = `https://translate.google.com/?sl=es&tl=${x.c}&op=translate`;
+  aviso("");
+  if(SR){ $("mEs").hidden=false; $("mPa").hidden=false; }
+  $("inicio").classList.remove("activa"); $("conv").classList.add("activa");
+  window.scrollTo(0,0);
+  decir(SALUDO[x.c], x.voz);
+}
+
+$("bEs").addEventListener("click", () => turno(true));
+$("bPa").addEventListener("click", () => turno(false));
+$("lEs").addEventListener("click", () => { $("tEs").value=""; $("tEs").focus(); });
+$("lPa").addEventListener("click", () => { $("tPa").value=""; $("tPa").focus(); });
+["tEs","tPa"].forEach(id => $(id).addEventListener("keydown", e => {
+  if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); turno(id==="tEs"); }
+}));
+$("mEs").addEventListener("click", () => escuchar($("mEs"), $("tEs"), "es-ES"));
+$("mPa").addEventListener("click", () => escuchar($("mPa"), $("tPa"), L.voz));
+
+function abrirAjustes(){ $("clave").value = CLAVE; $("estadoClave").textContent=""; $("velo").hidden=false; }
+$("abrirAjustes").addEventListener("click", abrirAjustes);
+$("cerrarAjustes").addEventListener("click", () => $("velo").hidden=true);
+$("guardarClave").addEventListener("click", async () => {
+  const k = $("clave").value.trim(); const est = $("estadoClave");
+  if(!k){ est.textContent="Pegue la clave primero."; return; }
+  CLAVE = k; try{ localStorage.setItem("gt_clave", k); }catch(e){}
+  est.textContent = "Probando…";
+  try{ const t = await traducir("Buenos días", "es", "en"); est.textContent = "✅ Funciona: «Buenos días» → «" + t + "»"; setTimeout(()=>$("velo").hidden=true, 1500); }
+  catch(e){ est.textContent = "❌ " + (e.message || "No se pudo conectar"); }
+});
+if(!CLAVE) setTimeout(abrirAjustes, 400);
+
+$("cVolver").addEventListener("click", () => {
+  try{ speechSynthesis.cancel(); }catch(e){}
+  pararMic();
+  $("conv").classList.remove("activa"); $("inicio").classList.add("activa");
+});
+</script>
+</body>
+</html>
