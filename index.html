@@ -207,9 +207,16 @@ function decir(texto, lang){
       const u = new SpeechSynthesisUtterance(texto);
       u.lang = lang; u.rate = 0.92;
       const base = lang.slice(0,2).toLowerCase();
-      const vs = speechSynthesis.getVoices();
-      const v = vs.find(x => (x.lang||"").toLowerCase().replace("_","-") === lang.toLowerCase())
-             || vs.find(x => (x.lang||"").toLowerCase().startsWith(base));
+      const raras = /eddy|flo|grandma|grandpa|rocko|reed|sandy|shelley|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|ralph|kathy|novelty/i;
+      const norm = x => (x.lang||"").toLowerCase().replace("_","-");
+      const vs = speechSynthesis.getVoices().filter(x => !raras.test(x.name) && !/eloquence/i.test(x.voiceURI||""));
+      const delIdioma = vs.filter(x => norm(x).startsWith(base));
+      const mismoPais = delIdioma.filter(x => norm(x) === lang.toLowerCase());
+      const lista = mismoPais.length ? mismoPais : delIdioma;
+      const v = lista.find(x => /premium|enhanced|mejorad|siri/i.test(x.name + " " + (x.voiceURI||"")))
+             || lista.find(x => x.default)
+             || lista.find(x => /compact/i.test(x.voiceURI||""))
+             || lista[0];
       if(v) u.voice = v;
       u.onend = u.onerror = () => res();
       speechSynthesis.speak(u);
